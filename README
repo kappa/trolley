@@ -1,0 +1,9 @@
+This is an on-screen chat system for fullscreen presentations.
+
+Currently it does not contain the chat component, only OSD output of
+text strings using Gtk & Cairo.
+
+It also does not work on Windows as expected because Gtk on Windows
+does not support alpha transparency.
+
+And I did not even test on Mac OS X.
