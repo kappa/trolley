@@ -174,9 +174,23 @@ class TrollerBus {
     }
 }
 
-use AnyEvent;
-
 my $trollers = new TrollerBus;
+
+use Config::Tiny;
+my $cfg = Config::Tiny->read('trolley.conf');
+
+use AnyEvent;
+use AnyEvent::FriendFeed::Realtime;
+
+my $client = AnyEvent::FriendFeed::Realtime->new(
+    username   => $cfg->{friendfeed}->{username},
+    remote_key => $cfg->{friendfeed}->{remote_key},
+    request    => "/feed/$cfg->{friendfeed}->{feed}",
+    on_entry   => sub {
+        my $entry = shift;
+        $trollers->add($entry->{body});
+    },
+);
 
 my $read_stdin = AnyEvent->io(
     fh  => \*STDIN, poll => 'r',
