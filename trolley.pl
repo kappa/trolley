@@ -11,7 +11,7 @@ class Troller {
     use constant SPEED => 400; #pxls per sec
 
     has 'y_offset'      => (is => 'ro', isa => 'Int',
-        default => sub { @{shift->bus->trollers} * 200 });
+        default => sub { @{shift->bus->trollers} * 70 });
 
     has 'x_offset'      => (is => 'rw', isa => 'Int',
         default => sub { shift->bus->width }, lazy => 1 );
