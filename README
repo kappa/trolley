@@ -1,6 +1,6 @@
 This is an on-screen chat system for fullscreen presentations.
 
-Currently it uses FriendFeed as a message bus.
+Currently it uses FriendFeed as a message bus via AnyEvent::FriendFeed::Realtime.
 
 OSD output of text strings is implemented using Gtk & Cairo.
 
