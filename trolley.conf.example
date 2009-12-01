@@ -1,0 +1,4 @@
+[friendfeed]
+username = friendfeed-username
+remote_key = friendfeed-remotekey
+feed = friendfeed-room
