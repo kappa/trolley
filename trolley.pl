@@ -203,10 +203,10 @@ use AnyEvent::FriendFeed::Realtime;
 my $client = AnyEvent::FriendFeed::Realtime->new(
     username   => $cfg->{friendfeed}->{username},
     remote_key => $cfg->{friendfeed}->{remote_key},
-    request    => "/feed/$cfg->{friendfeed}->{feed}",
+    request    => "/feed/$cfg->{friendfeed}->{feed}?raw=1",
     on_entry   => sub {
         my $entry = shift;
-        $trollers->add($entry->{body});
+        $trollers->add($entry->{rawBody});
     },
 );
 
