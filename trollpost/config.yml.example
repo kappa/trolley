@@ -1,0 +1,5 @@
+layout: "main"
+logger: "file"
+frf_username: "friendfeed-user"
+frf_remotekey: "friendfeed-remotekey"
+frf_room: "friendfeed-room"

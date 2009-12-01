@@ -1,0 +1,32 @@
+<h2>Trolley</h2>
+
+<script>
+function post(form) {
+    var save_submit = $('#submit').val();
+    $('#submit').attr('disabled', 'disabled').val('...отправляется...');
+    $('#line').attr('disabled', 'disabled');
+    $.post(form.attr("action"), { line: $('#line').val() }, function(resp)
+    {
+        $('#line').removeAttr('disabled').blur().focus();
+        $('#submit').removeAttr('disabled').val(save_submit);
+        if (resp && resp.c) {
+            $('#line').val('').focus();
+            $('#success').show();
+            setTimeout(function() { $('#success').hide()}, 1500);
+        }
+    }, 'json');
+}
+$(function() {
+    $('#line').val('').focus();
+});
+</script>
+
+<form method="POST" action="post" onsubmit="post($(this)); return false;">
+<input name="line" id="line" size="50">
+<input type="submit" value="Отправить" id="submit">
+<span id="success" style="display: none; color: green">
+Отправлено!
+</span>
+</form>
+
+
