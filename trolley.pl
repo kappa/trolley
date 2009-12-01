@@ -7,8 +7,9 @@ class Troller {
     use Data::Dump;
     use Gtk2;
     use Cairo;
+    use List::Util qw/max/;
 
-    use constant SPEED => 400; #pxls per sec
+    use constant SPEED => 800; #pxls per sec
 
     has 'y_offset'      => (is => 'ro', isa => 'Int',
         default => sub { @{shift->bus->trollers} * 70 });
@@ -21,20 +22,46 @@ class Troller {
     has 'bus'           => (is => 'ro', isa => 'TrollerBus',
         required => 1, weak_ref => 1);
 
-    method draw($cr) {
-        if ($self->text) {
-            my $std_extents = $cr->text_extents("M");
-            unless ($self->x_offset_limit) {
-                my $extents = $cr->text_extents($self->text);
-                $self->x_offset_limit(-($extents->{width} + $extents->{x_bearing}));
-            }
+    has 'rendering'     => (is => 'rw', isa => 'Cairo::Surface');
 
-            $cr->move_to($self->x_offset, $self->y_offset + $std_extents->{height} + 30);
-            $cr->text_path($self->text);
-            $cr->set_source_rgba(0, 0, 0, 0.7);
-            $cr->stroke_preserve();
-            $cr->set_source_rgb(1, 1, 1);
-            $cr->fill();
+    method prep_image() {
+        my $surface = Cairo::ImageSurface->create('argb32', 100, 100);
+        my $cr = Cairo::Context->create($surface);
+        $cr->select_font_face('sans serif', 'normal', 'bold');
+        $cr->set_font_size($self->bus->font_size);
+        my $extents = $cr->text_extents($self->text . 'M'); # to guarantee line height
+        # save scrolling limit mark
+        $self->x_offset_limit(-($extents->{width} + $extents->{x_bearing}));
+
+        # recreate everything to contain all the text
+        $surface = Cairo::ImageSurface->create('argb32',
+            $extents->{width}  + max(0, $extents->{x_bearing} + 15), # two halves of line width
+            $extents->{height} + max(0, -$extents->{y_bearing}) + 15);
+        $cr = Cairo::Context->create($surface);
+        $cr->select_font_face('sans serif', 'normal', 'bold');
+        $cr->set_font_size($self->bus->font_size);
+        $cr->set_line_width(13);
+        $cr->set_line_join('round');
+
+        $cr->move_to(7, 7 + $extents->{height});
+        $cr->text_path($self->text);
+        $cr->set_source_rgba(0, 0, 0, 0.7);
+        $cr->stroke_preserve();
+        $cr->set_source_rgb(1, 1, 1);
+        $cr->fill();
+        undef $cr;
+
+        $self->rendering($surface);
+
+        $self;
+    }
+
+    method draw($cr) {
+        if ($self->rendering) {
+            $cr->translate($self->x_offset, $self->y_offset);
+            $cr->set_source_surface($self->rendering, 0, 0);
+            $cr->paint;
+            $cr->identity_matrix;   # undo translate
         }
 
         return 1;
@@ -138,16 +165,11 @@ class TrollerBus {
         $cr->set_operator('clear');
         $cr->paint;
 
-        $cr->set_line_width(13);
-        $cr->set_line_join('round');
-
         unless (@{$self->trollers}) {
             return 1;
         }
 
-        $cr->set_operator('source');
-        $cr->select_font_face('sans serif', 'normal', 'bold');
-        $cr->set_font_size($self->font_size);
+        $cr->set_operator('over');
 
         for my $troller (grep {$_} @{$self->trollers}) {
             $troller->draw($cr);
@@ -162,15 +184,11 @@ class TrollerBus {
 
     method add(Str $str) {
         push @{$self->trollers},
-            Troller->new(bus => $self, text => $str);
+            Troller->new(bus => $self, text => $str)->prep_image();
     }
 
     method remove(Troller $tr) {
         delete $self->trollers->[firstidx { ($_ || '') eq $tr } @{$self->trollers}];
-    }
-
-    method do_iteration() {
-        Gtk2->main_iteration_do(0);
     }
 }
 
@@ -180,6 +198,7 @@ use Config::Tiny;
 my $cfg = Config::Tiny->read('trolley.conf');
 
 use AnyEvent;
+use AnyEvent::FriendFeed::Realtime;
 
 my $client = AnyEvent::FriendFeed::Realtime->new(
     username   => $cfg->{friendfeed}->{username},
@@ -199,6 +218,6 @@ my $read_stdin = AnyEvent->io(
     }
 );
 
-while(1) {
-    $trollers->do_iteration;
-}
+$SIG{INT} = sub { Gtk2->main_quit; };
+
+Gtk2->main;
