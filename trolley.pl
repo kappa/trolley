@@ -180,8 +180,6 @@ use Config::Tiny;
 my $cfg = Config::Tiny->read('trolley.conf');
 
 use AnyEvent;
-use lib '.';
-require "AnyEvent/FriendFeed/Realtime.pm";
 
 my $client = AnyEvent::FriendFeed::Realtime->new(
     username   => $cfg->{friendfeed}->{username},
