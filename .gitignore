@@ -1,2 +1,3 @@
 trollpost/config.yml
 trolley.conf
+trollpost/logs/*.log
