@@ -137,9 +137,7 @@ class TrollerBus {
 	$win->stick;
 
         # make clicks go through
-        my ($width, $height) = $win->get_size_request;
-
-	my $shape_mask = Gtk2::Gdk::Pixmap->new(undef, $width, $height, 1);
+	my $shape_mask = Gtk2::Gdk::Pixmap->new(undef, 1, 1, 1);
 
         if ($shape_mask) {
             $win->input_shape_combine_mask(undef, 0, 0);
